@@ -96,17 +96,3 @@ def display_images(temp_df, img_dir, num_images=9):
 # Display 9 random images with captions
 display_images(data.sample(9), image_path)
 ```
-
-```{python}
-base_model = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
-
-base_model.summary()
-
-# Extract features from the images
-image_features = extract_features_batch(image_path, base_model, img_size=224, batch_size=32)
-
-# Convert features to a Pandas DataFrame for analysis
-features_df = pd.DataFrame.from_dict(image_features, orient='index')
-features_df.reset_index(inplace=True)
-features_df.columns = ['image'] + [f'feature_{i}' for i in range(features_df.shape[1] - 1)]
-```
