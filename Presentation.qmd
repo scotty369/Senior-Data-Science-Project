@@ -7,7 +7,7 @@ theme: solarized
 transition: fade
 ---
 
-## Slide Title
+## Introduction
 
 Here is some text on the slide.
 
@@ -17,7 +17,7 @@ Here is some text on the slide.
 
 ---
 
-## Another Slide
+## 
 
 This is another slide with **bold text** and *italic text*.
 
