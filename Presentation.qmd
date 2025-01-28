@@ -1,0 +1,29 @@
+---
+title: "My Senior Project"
+author: "Scott Townsend"
+date: "2025-01-27"
+format: revealjs
+theme: solarized
+transition: fade
+---
+
+## Slide Title
+
+Here is some text on the slide.
+
+- Point 1
+- Point 2
+- Point 3
+
+---
+
+## Another Slide
+
+This is another slide with **bold text** and *italic text*.
+
+- Add images:
+  ![](path-to-image.jpg)
+
+- Include code blocks:
+  ```python
+  print("Hello, Quarto!")
