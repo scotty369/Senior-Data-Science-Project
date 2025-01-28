@@ -3,6 +3,24 @@ title: "Senior Data Science Project"
 format: html
 ---
 
+Introduction: 
+
+I want to create a tool that analyzes an image and generates a short caption describing it. 
+This tool can help visually impaired individuals understand pictures and automate tasks 
+like tagging photos or creating captions for social media. I plan to use a dataset such as 
+MS-COCO or Flickr8k, which contain thousands of images paired with captions, to train the 
+model.
+
+Project Deliverables: 
+
+• Cleaned Data: Get the dataset ready by organizing pictures and captions. 
+• Working Model: A part that looks at pictures (CNN) and a part that writes captions 
+(LSTM/Transformer). 
+• Performance Check: Test how good the captions are  
+• Interactive Demo: A tool where someone can upload a picture, and it shows the caption. 
+• Visuals: Simple graphs to explain how the model works and where it focuses in the image. 
+• Write-Up: A short explanation of how the project works and why it’s useful.
+
 ```{python}
 import numpy as np
 import pandas as pd
@@ -15,6 +33,9 @@ import matplotlib.pyplot as plt
 from textwrap import wrap
 from tqdm import tqdm
 from wordcloud import WordCloud
+import torch
+from transformers import CLIPProcessor, CLIPModel
+from PIL import Image
 
 image_path = '/Users/scotttow123/Documents/BYUI/Senior Data Science Project/Images'
 caption_file = "/Users/scotttow123/Documents/BYUI/Senior Data Science Project/captions.txt"
@@ -195,9 +216,6 @@ plt.show()
 ```
 
 ```{python}
-import torch
-from transformers import CLIPProcessor, CLIPModel
-from PIL import Image
 
 model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
 processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")

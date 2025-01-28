@@ -1,5 +1,5 @@
 ---
-title: "My Senior Project"
+title: "Senior Data Science Project: Image Captioning Tool"
 author: "Scott Townsend"
 date: "2025-01-27"
 format: revealjs
@@ -7,23 +7,42 @@ theme: solarized
 transition: fade
 ---
 
-## Introduction
+## Data Preparation
 
-Here is some text on the slide.
+I prepared the dataset by performing the following tasks:
 
-- Point 1
-- Point 2
-- Point 3
+- Removed duplicate rows
+- Filled missing captions with "No caption"
+- Verified the existence of image files
 
 ---
 
-## 
+## Data Preparation
 
-This is another slide with **bold text** and *italic text*.
+We prepared the dataset by performing the following tasks:
 
-- Add images:
-  ![](path-to-image.jpg)
+- Removed duplicate rows
+- Filled missing captions with "No caption"
+- Verified the existence of image files
 
-- Include code blocks:
-  ```python
-  print("Hello, Quarto!")
+---
+
+## Exploratory Data Analysis
+
+### Caption Statistics
+We analyzed the captions to understand their distribution and sentiment.
+
+---
+
+## Interactive Demo
+
+Below is a demonstration of the tool. Upload an image to generate a caption:
+
+---
+
+## Conclusion
+
+- Built an end-to-end image captioning tool
+- Cleaned and explored data to ensure robustness
+- Used deep learning models to achieve accurate captions
+- Created an interactive tool to assist visually impaired users and automate captioning
