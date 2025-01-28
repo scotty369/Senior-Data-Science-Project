@@ -14,38 +14,69 @@ from tensorflow.keras.applications.vgg16 import preprocess_input
 import matplotlib.pyplot as plt
 from textwrap import wrap
 from tqdm import tqdm
-```
+from wordcloud import WordCloud
 
-```{python}
 image_path = '/Users/scotttow123/Documents/BYUI/Senior Data Science Project/Images'
+caption_file = "/Users/scotttow123/Documents/BYUI/Senior Data Science Project/captions.txt"
 
-data = pd.read_csv("/Users/scotttow123/Documents/BYUI/Senior Data Science Project/captions.txt")
+try:
+    data = pd.read_csv(caption_file)
+    print("Data loaded successfully")
+except FileNotFoundError:
+    print(f"Error: The file {caption_file} was not found.")
+    data = pd.DataFrame() 
 
 data.head()
 ```
 
 ```{python}
+if data.duplicated().any():
+    print(f"Found {data.duplicated().sum()} duplicate rows. Removing duplicates...")
+    data = data.drop_duplicates()
+
+if data['caption'].isnull().any():
+    print(f"Found {data['caption'].isnull().sum()} missing captions. Replacing with 'No caption'.")
+    data['caption'] = data['caption'].fillna("No caption")
+
+valid_image_paths = data['image'].apply(lambda x: os.path.exists(os.path.join(image_path, x)))
+if not valid_image_paths.all():
+    print(f"Found {(~valid_image_paths).sum()} invalid image paths. Removing these rows...")
+    data = data[valid_image_paths]
+```
+
+```{python}
 def read_image(path, img_size=224):
-    img = load_img(path, color_mode='rgb', target_size=(img_size, img_size))
-    img = img_to_array(img)
-    img = img / 255.0
-    return img
+    """Reads and preprocesses an image."""
+    try:
+        img = load_img(path, color_mode='rgb', target_size=(img_size, img_size))
+        img = img_to_array(img)
+        img = img / 255.0
+        return img
+    except Exception as e:
+        print(f"Error reading image {path}: {e}")
+        return None
 
 def display_images(temp_df, img_dir, num_images=9):
+    """Displays a grid of images with their captions."""
     temp_df = temp_df.reset_index(drop=True)
     plt.figure(figsize=(15, 15))
     for i in range(num_images):
         plt.subplot(3, 3, i + 1)
         image_path = os.path.join(img_dir, temp_df.image[i])
+        
         image = read_image(image_path)
-        plt.imshow(image)
-        plt.title("\n".join(wrap(temp_df.caption[i], 20)))
+        if image is not None:
+            plt.imshow(image)
+            plt.title("\n".join(wrap(temp_df.caption[i], 20)))
+        else:
+            plt.imshow(np.ones((224, 224, 3))) 
+            plt.title("Image not found")
         plt.axis("off")
     plt.tight_layout()
     plt.show()
 
-# Display 9 random images with captions
 display_images(data.sample(9), image_path)
+
 ```
 
 ```{python}
@@ -95,4 +126,121 @@ def display_images(temp_df, img_dir, num_images=9):
 
 # Display 9 random images with captions
 display_images(data.sample(9), image_path)
+```
+
+```{python}
+def display_caption_stats(captions):
+    """Displays some statistics about the captions."""
+    caption_lengths = captions.apply(lambda x: len(x.split()))
+    print(f"Total captions: {len(captions)}")
+    print(f"Average caption length: {caption_lengths.mean():.2f} words")
+    print(f"Max caption length: {caption_lengths.max()} words")
+    print(f"Min caption length: {caption_lengths.min()} words")
+
+display_caption_stats(data['caption'])
+
+display_images(data.sample(9), image_path)
+
+```
+
+```{python}
+print("Dataset Info:")
+data.info()
+
+print("\nMissing Values:")
+print(data.isnull().sum())
+
+def display_caption_stats(captions):
+    """Calculates and displays statistics about the captions."""
+    caption_lengths = captions.apply(lambda x: len(x.split()))  
+    print(f"\nTotal captions: {len(captions)}")
+    print(f"Average caption length: {caption_lengths.mean():.2f} words")
+    print(f"Max caption length: {caption_lengths.max()} words")
+    print(f"Min caption length: {caption_lengths.min()} words")
+
+display_caption_stats(data['caption'])
+
+def generate_wordcloud(captions):
+    """Generates a word cloud from the captions."""
+    all_text = " ".join(captions)
+    wordcloud = WordCloud(width=800, height=400, background_color="white").generate(all_text)
+    
+    plt.figure(figsize=(10, 5))
+    plt.imshow(wordcloud, interpolation="bilinear")
+    plt.axis("off")
+    plt.title("Word Cloud of Captions", fontsize=20)
+    plt.show()
+
+generate_wordcloud(data['caption'])
+```
+
+```{python}
+from textblob import TextBlob
+
+def analyze_sentiment(captions):
+    """Analyzes the sentiment of captions."""
+    sentiments = captions.apply(lambda x: TextBlob(x).sentiment.polarity)
+    print(f"Average Sentiment: {sentiments.mean():.2f}")
+    print(f"Most Positive Caption: {captions.iloc[sentiments.idxmax()]}")
+    print(f"Most Negative Caption: {captions.iloc[sentiments.idxmin()]}")
+    return sentiments
+
+data['sentiment'] = analyze_sentiment(data['caption'])
+plt.hist(data['sentiment'], bins=20, color='skyblue', edgecolor='black')
+plt.title("Sentiment Distribution")
+plt.xlabel("Sentiment Polarity")
+plt.ylabel("Frequency")
+plt.show()
+
+```
+
+```{python}
+import torch
+from transformers import CLIPProcessor, CLIPModel
+from PIL import Image
+
+model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+
+def extract_clip_features(image_paths):
+    features = {}
+    for path in image_paths:
+        image = Image.open(path).convert("RGB")
+        inputs = processor(images=image, return_tensors="pt", padding=True)
+        outputs = model.get_image_features(**inputs)
+        features[os.path.basename(path)] = outputs.detach().numpy()
+    return features
+
+image_paths = [os.path.join(image_path, img) for img in os.listdir(image_path)]
+features = extract_clip_features(image_paths)
+
+```
+
+```{python}
+print("\nFeature Extraction Summary:")
+print(f"Total Images Processed: {len(features)}")
+print(f"Feature Dimensions (per image): {next(iter(features.values())).shape}")
+
+features_df = pd.DataFrame.from_dict(features, orient="index")
+features_df.to_csv("image_features.csv")
+print("\nImage features saved to 'image_features.csv'.")
+
+from sklearn.decomposition import PCA
+
+def visualize_features(features_dict, n_components=2):
+    """Visualizes features using PCA."""
+    feature_matrix = np.array(list(features_dict.values()))
+    pca = PCA(n_components=n_components)
+    reduced_features = pca.fit_transform(feature_matrix)
+    
+    plt.figure(figsize=(8, 6))
+    plt.scatter(reduced_features[:, 0], reduced_features[:, 1], alpha=0.5, c='blue')
+    plt.title("PCA Visualization of Extracted Features", fontsize=16)
+    plt.xlabel("Principal Component 1")
+    plt.ylabel("Principal Component 2")
+    plt.grid(True)
+    plt.show()
+
+visualize_features(features)
+
 ```
