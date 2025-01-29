@@ -10,9 +10,8 @@
 <link href="Presentation_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
   <meta name="generator" content="quarto-1.4.553">
 
-  <meta name="author" content="Scott Townsend">
   <meta name="dcterms.date" content="2025-01-27">
-  <title>Senior Data Science Project: Image Captioning Tool</title>
+  <title>C-Store Project Proposal</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
@@ -327,53 +326,100 @@
     <div class="slides">
 
 <section id="title-slide" class="quarto-title-block center">
-  <h1 class="title">Senior Data Science Project: Image Captioning Tool</h1>
+  <h1 class="title">C-Store Project Proposal</h1>
 
 <div class="quarto-title-authors">
-<div class="quarto-title-author">
-<div class="quarto-title-author-name">
-Scott Townsend 
-</div>
-</div>
 </div>
 
   <p class="date">2025-01-27</p>
 </section>
-<section id="data-preparation" class="slide level2">
-<h2>Data Preparation</h2>
-<p>I prepared the dataset by performing the following tasks:</p>
+<section>
+<section id="presented-by" class="title-slide slide level1 center">
+<h1>Presented by:</h1>
 <ul>
-<li>Removed duplicate rows</li>
-<li>Filled missing captions with “No caption”</li>
-<li>Verified the existence of image files</li>
+<li><strong>Jacob Brown</strong> - Data Science<br>
+</li>
+<li><strong>Tucker Trost</strong> - Data Science<br>
+</li>
+<li><strong>Brandon Ansbergs</strong> - Computer Science<br>
+</li>
+<li><strong>Tonatiuh De León</strong> - Data Science<br>
+</li>
+<li><strong>Scott Townsend</strong> - Data Science</li>
 </ul>
 </section>
-<section id="data-preparation-1" class="slide level2">
-<h2>Data Preparation</h2>
-<p>We prepared the dataset by performing the following tasks:</p>
-<ul>
-<li>Removed duplicate rows</li>
-<li>Filled missing captions with “No caption”</li>
-<li>Verified the existence of image files</li>
-</ul>
+<section class="slide level2">
+
+</section></section>
+<section>
+<section id="business-needs-we-will-address-and-why-this-need-is-of-value." class="title-slide slide level1 center">
+<h1>Business needs we will address and why this need is of value.</h1>
+<p><strong>Store Layout Optimization:</strong></p>
+<p>-WHAT: Analyze whether the placement of a product in a specific area of the store increases the likelihood of purchase</p>
+<p>-WHY: Understanding the impact of product placement on purchase likelihood helps maximize sales by strategically designing the store layout to influence customer behavior and increase impulse purchases..</p>
+<p>Estimating Revenue from Discounts</p>
+<p>-WHAT: Analyze how different discount percentages influence sales and predict total revenue based on discount levels.</p>
+<p>-WHY: Accurately predicting the relationship between discount levels and revenue enables stores to design effective discount strategies that maximize profits while maintaining customer satisfaction.</p>
 </section>
-<section id="exploratory-data-analysis" class="slide level2">
-<h2>Exploratory Data Analysis</h2>
-<h3 id="caption-statistics">Caption Statistics</h3>
-<p>We analyzed the captions to understand their distribution and sentiment.</p>
+<section class="slide level2">
+
+</section></section>
+<section>
+<section id="ml-model" class="title-slide slide level1 center">
+<h1>ML Model</h1>
+<p>Store Layout Optimization</p>
+<p>-Feature Engineering: Include features such as product type, shelf location, proximity to high-traffic areas, and customer demographics.</p>
+<p>-Model Selection: Use logistic regression or classification models (e.g., decision trees or random forests) to predict the likelihood of purchase based on product placement.</p>
+<p>-Optimization: Use results to identify the most effective placements and simulate rearrangements to maximize purchases.</p>
+<p>Estimating Revenue from Discounts</p>
+<p>-Feature Engineering: Incorporate features like discount percentage, time of year, product demand elasticity, and competitor pricing.</p>
+<p>-Model Selection: Use linear regression or ensemble models (e.g., gradient boosting) to predict sales volume and total revenue based on discount levels.</p>
+<p>-Forecasting: Predict revenue scenarios for different discount strategies and identify the optimal discount levels to balance profitability and customer engagement.</p>
 </section>
-<section id="interactive-demo" class="slide level2">
-<h2>Interactive Demo</h2>
-<p>Below is a demonstration of the tool. Upload an image to generate a caption:</p>
+<section class="slide level2">
+
+</section></section>
+<section>
+<section id="explanation-of-the-leveraged-data-format" class="title-slide slide level1 center">
+<h1>Explanation of the leveraged data format</h1>
+<p>For Store Layout Optimization:</p>
+<p>-Data includes product ID, store section (e.g., checkout or aisle), customer traffic, number of sales, time frame (e.g., week/month), and customer demographics.</p>
+<p>-Example: A dataset row might show a product placed in the front aisle with 500 customers passing by, leading to 50 purchases in one week.</p>
+<p>For Revenue from Discounts:</p>
+<p>-Data includes product ID, discount percentage, sales volume, total revenue, time of sale (e.g., weekday or weekend), and season (e.g., holiday).</p>
+<p>-Example: A dataset row might show a 20% discount on a product during a holiday season, selling 200 units and generating $2,000.</p>
 </section>
-<section id="conclusion" class="slide level2">
-<h2>Conclusion</h2>
-<ul>
-<li>Built an end-to-end image captioning tool</li>
-<li>Cleaned and explored data to ensure robustness</li>
-<li>Used deep learning models to achieve accurate captions</li>
-<li>Created an interactive tool to assist visually impaired users and automate captioning</li>
-</ul>
+<section class="slide level2">
+
+</section></section>
+<section>
+<section id="visualizations" class="title-slide slide level1 center">
+<h1>Visualizations</h1>
+<p>Store Layout Optimization:</p>
+<ol type="1">
+<li><p>Heatmaps: Highlight high-traffic areas in the store. Example: Show which store sections get the most foot traffic.</p></li>
+<li><p>Bar Charts: Compare sales in different store sections. Example: Display which zones sell the most products.</p></li>
+<li><p>Scatter Plots: Show the relationship between customer traffic and sales. Example: Prove whether high traffic increases purchases.</p></li>
+</ol>
+<p>Revenue from Discounts:</p>
+<ol type="1">
+<li><p>Line Graphs: Show how sales change with discounts. Example: Find the best discount for maximum sales.</p></li>
+<li><p>Box Plots: Display sales data across different discount levels. Example: Spot products that perform unusually well during discounts.</p></li>
+<li><p>Stacked Bar Charts: Compare revenue by discount for product categories. Example: See which categories benefit most from discounts.</p></li>
+</ol>
+</section>
+<section class="slide level2">
+
+</section></section>
+<section id="description-of-what-constitutes-a-successfully-implemented-product" class="title-slide slide level1 center">
+<h1>Description of what constitutes a successfully implemented product</h1>
+<p>We aim to create a dynamic store layout, paired with a year-long sales and discount timeline, to optimize product placement and drive performance throughout the year.</p>
+<p>-Accurate Insights: Reliable predictions for optimizing product placement and discount strategies.</p>
+<p>-User-Friendly: Clear dashboards and visualizations for easy decision-making.</p>
+<p>-Scalable: Adapts to different store sizes, products, and seasons.</p>
+<p>-Measurable Impact: Boosts sales, revenue, or profit margins with clear KPIs.</p>
+<p>-Continuous Improvement: Updates models and strategies with new data for better results.</p>
+<p>Example: A 15% sales increase from optimized layouts or a 10% revenue boost from smarter discounts.</p>
 <div class="quarto-auto-generated-content">
 <div class="footer footer-default">
 

@@ -1,48 +1,111 @@
 ---
-title: "Senior Data Science Project: Image Captioning Tool"
-author: "Scott Townsend"
+title: "C-Store Project Proposal"
 date: "2025-01-27"
 format: revealjs
 theme: solarized
 transition: fade
 ---
 
-## Data Preparation
+# Presented by:
 
-I prepared the dataset by performing the following tasks:
-
-- Removed duplicate rows
-- Filled missing captions with "No caption"
-- Verified the existence of image files
-
----
-
-## Data Preparation
-
-We prepared the dataset by performing the following tasks:
-
-- Removed duplicate rows
-- Filled missing captions with "No caption"
-- Verified the existence of image files
+- **Jacob Brown** - Data Science  
+- **Tucker Trost** - Data Science  
+- **Brandon Ansbergs** - Computer Science  
+- **Tonatiuh De León** - Data Science  
+- **Scott Townsend** - Data Science  
 
 ---
 
-## Exploratory Data Analysis
+# Business needs we will address and why this need is of value.
 
-### Caption Statistics
-We analyzed the captions to understand their distribution and sentiment.
+**Store Layout Optimization:**
+
+-WHAT: Analyze whether the placement of a product in a specific area of the store increases the likelihood of purchase
+
+-WHY: Understanding the impact of product placement on purchase likelihood helps maximize sales by strategically designing the store layout to influence customer behavior and increase impulse purchases..
+
+Estimating Revenue from Discounts
+
+-WHAT: Analyze how different discount percentages influence sales and predict total revenue based on discount levels.
+
+-WHY: Accurately predicting the relationship between discount levels and revenue enables stores to design effective discount strategies that maximize profits while maintaining customer satisfaction.
 
 ---
 
-## Interactive Demo
+# ML Model
 
-Below is a demonstration of the tool. Upload an image to generate a caption:
+Store Layout Optimization
+
+-Feature Engineering: Include features such as product type, shelf location, proximity to high-traffic areas, and customer demographics.
+
+-Model Selection: Use logistic regression or classification models (e.g., decision trees or random forests) to predict the likelihood of purchase based on product placement.
+
+-Optimization: Use results to identify the most effective placements and simulate rearrangements to maximize purchases.
+
+Estimating Revenue from Discounts
+
+-Feature Engineering: Incorporate features like discount percentage, time of year, product demand elasticity, and competitor pricing.
+
+-Model Selection: Use linear regression or ensemble models (e.g., gradient boosting) to predict sales volume and total revenue based on discount levels.
+
+-Forecasting: Predict revenue scenarios for different discount strategies and identify the optimal discount levels to balance profitability and customer engagement.
 
 ---
 
-## Conclusion
+# Explanation of the leveraged data format
 
-- Built an end-to-end image captioning tool
-- Cleaned and explored data to ensure robustness
-- Used deep learning models to achieve accurate captions
-- Created an interactive tool to assist visually impaired users and automate captioning
+For Store Layout Optimization:
+
+-Data includes product ID, store section (e.g., checkout or aisle), customer traffic, number of sales, time frame (e.g., week/month), and customer demographics.
+
+-Example: A dataset row might show a product placed in the front aisle with 500 customers passing by, leading to 50 purchases in one week.
+
+For Revenue from Discounts:
+
+-Data includes product ID, discount percentage, sales volume, total revenue, time of sale (e.g., weekday or weekend), and season (e.g., holiday).
+
+-Example: A dataset row might show a 20% discount on a product during a holiday season, selling 200 units and generating $2,000.
+
+---
+
+# Visualizations 
+
+Store Layout Optimization:
+
+1. Heatmaps: Highlight high-traffic areas in the store.
+Example: Show which store sections get the most foot traffic.
+
+2. Bar Charts: Compare sales in different store sections.
+Example: Display which zones sell the most products.
+
+3. Scatter Plots: Show the relationship between customer traffic and sales.
+Example: Prove whether high traffic increases purchases.
+
+Revenue from Discounts:
+
+1. Line Graphs: Show how sales change with discounts.
+Example: Find the best discount for maximum sales.
+
+2. Box Plots: Display sales data across different discount levels.
+Example: Spot products that perform unusually well during discounts.
+
+3. Stacked Bar Charts: Compare revenue by discount for product categories.
+Example: See which categories benefit most from discounts.
+
+---
+
+# Description of what constitutes a successfully implemented product
+
+We aim to create a dynamic store layout, paired with a year-long sales and discount timeline, to optimize product placement and drive performance throughout the year.
+
+-Accurate Insights: Reliable predictions for optimizing product placement and discount strategies.
+
+-User-Friendly: Clear dashboards and visualizations for easy decision-making.
+
+-Scalable: Adapts to different store sizes, products, and seasons.
+
+-Measurable Impact: Boosts sales, revenue, or profit margins with clear KPIs.
+
+-Continuous Improvement: Updates models and strategies with new data for better results.
+
+Example: A 15% sales increase from optimized layouts or a 10% revenue boost from smarter discounts.
