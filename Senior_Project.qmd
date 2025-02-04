@@ -96,7 +96,6 @@ def display_images(temp_df, img_dir, num_images=9):
     plt.show()
 
 display_images(data.sample(9), image_path)
-
 ```
 
 ```{python}
@@ -211,7 +210,6 @@ plt.title("Sentiment Distribution")
 plt.xlabel("Sentiment Polarity")
 plt.ylabel("Frequency")
 plt.show()
-
 ```
 
 ```{python}
@@ -284,7 +282,6 @@ def define_model(vocab_size, max_length, embedding_dim=256):
     model.compile(optimizer=Adam(), loss='categorical_crossentropy', metrics=['accuracy'])
     
     return model
-
 ```
 
 
@@ -297,7 +294,6 @@ base_model = VGG16(weights='imagenet')
 model = Model(inputs=base_model.input, outputs=base_model.get_layer('fc2').output)
 
 features_vgg16 = extract_features_batch(image_path, model)
-
 ```
 
 ```{python}
