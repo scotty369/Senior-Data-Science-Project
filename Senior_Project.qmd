@@ -8,7 +8,7 @@ Introduction:
 I want to create a tool that analyzes an image and generates a short caption describing it. 
 This tool can help visually impaired individuals understand pictures and automate tasks 
 like tagging photos or creating captions for social media. I plan to use a dataset such as 
-MS-COCO or Flickr8k, which contain thousands of images paired with captions, to train the 
+Flickr8k, which contain thousands of images paired with captions, to train the 
 model.
 
 Project Deliverables: 
@@ -35,7 +35,6 @@ from tqdm import tqdm
 from wordcloud import WordCloud
 import torch
 from transformers import CLIPProcessor, CLIPModel
-from PIL import Image
 
 image_path = '/Users/scotttow123/Documents/BYUI/Senior Data Science Project/Images'
 caption_file = "/Users/scotttow123/Documents/BYUI/Senior Data Science Project/captions.txt"
@@ -216,49 +215,164 @@ plt.show()
 ```
 
 ```{python}
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout, Add
+from tensorflow.keras.optimizers import Adam
 
-model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
-processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+def define_model(vocab_size, max_length, embedding_dim=256):
+    """Define the captioning model."""
+    image_input = tf.keras.Input(shape=(4096,)) 
 
-def extract_clip_features(image_paths):
-    features = {}
-    for path in image_paths:
-        image = Image.open(path).convert("RGB")
-        inputs = processor(images=image, return_tensors="pt", padding=True)
-        outputs = model.get_image_features(**inputs)
-        features[os.path.basename(path)] = outputs.detach().numpy()
-    return features
+    caption_input = tf.keras.Input(shape=(max_length,))
 
-image_paths = [os.path.join(image_path, img) for img in os.listdir(image_path)]
-features = extract_clip_features(image_paths)
+    image_features = Dense(embedding_dim, activation='relu')(image_input)
+
+    caption_embedding = Embedding(vocab_size, embedding_dim)(caption_input)
+    caption_lstm = LSTM(256)(caption_embedding)
+
+    merged = Add()([image_features, caption_lstm])
+    merged = Dropout(0.5)(merged)
+
+    output = Dense(vocab_size, activation='softmax')(merged)
+
+    model = tf.keras.Model(inputs=[image_input, caption_input], outputs=output)
+    model.compile(optimizer=Adam(), loss='categorical_crossentropy', metrics=['accuracy'])
+    
+    return model
+```
+
+```{python}
+from tensorflow.keras.applications.vgg16 import VGG16
+from tensorflow.keras.models import Model
+
+def build_vgg16_model(img_size=224):
+    """Builds a VGG16 model for feature extraction."""
+    base_model = VGG16(include_top=False, input_shape=(img_size, img_size, 3))
+
+    x = base_model.output
+    x = tf.keras.layers.GlobalAveragePooling2D()(x)
+ 
+    model = Model(inputs=base_model.input, outputs=x)
+    
+    return model
+
+vgg16_model = build_vgg16_model()
+vgg16_model.summary()
+```
+
+```{python}
+# %%
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout, Add
+from tensorflow.keras.optimizers import Adam
+
+def define_model(vocab_size, max_length, embedding_dim=256):
+    """Defines the image captioning model."""
+    image_input = tf.keras.Input(shape=(4096,))
+    caption_input = tf.keras.Input(shape=(max_length,))
+    
+    image_features = Dense(embedding_dim, activation='relu')(image_input)
+    caption_embedding = Embedding(vocab_size, embedding_dim)(caption_input)
+    caption_lstm = LSTM(256)(caption_embedding)
+    
+    merged = Add()([image_features, caption_lstm])
+    merged = Dropout(0.5)(merged)
+    
+    output = Dense(vocab_size, activation='softmax')(merged)
+
+    model = Model(inputs=[image_input, caption_input], outputs=output)
+    model.compile(optimizer=Adam(), loss='categorical_crossentropy', metrics=['accuracy'])
+    
+    return model
+
+```
+
+
+```{python}
+# %%
+from tensorflow.keras.applications.vgg16 import VGG16
+from tensorflow.keras.models import Model
+
+base_model = VGG16(weights='imagenet')
+model = Model(inputs=base_model.input, outputs=base_model.get_layer('fc2').output)
+
+features_vgg16 = extract_features_batch(image_path, model)
 
 ```
 
 ```{python}
-print("\nFeature Extraction Summary:")
-print(f"Total Images Processed: {len(features)}")
-print(f"Feature Dimensions (per image): {next(iter(features.values())).shape}")
-
-features_df = pd.DataFrame.from_dict(features, orient="index")
-features_df.to_csv("image_features.csv")
-print("\nImage features saved to 'image_features.csv'.")
-
+# %%
 from sklearn.decomposition import PCA
+import numpy as np
+import matplotlib.pyplot as plt
 
-def visualize_features(features_dict, n_components=2):
-    """Visualizes features using PCA."""
+def visualize_features_vgg16(features_dict, n_components=2):
+    """Visualizes extracted features using PCA."""
+    feature_matrix = np.array(list(features_dict.values()))
+
+    pca = PCA(n_components=n_components)
+    reduced_features = pca.fit_transform(feature_matrix)
+    
+    plt.figure(figsize=(8, 6))
+    plt.scatter(reduced_features[:, 0], reduced_features[:, 1], alpha=0.5, c='blue')
+    plt.title("PCA Visualization of VGG16 Extracted Features", fontsize=16)
+    plt.xlabel("Principal Component 1")
+    plt.ylabel("Principal Component 2")
+    plt.grid(True)
+    plt.show()
+
+visualize_features_vgg16(features_vgg16)
+```
+
+```{python}
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+
+def visualize_features_vgg16(features_dict, n_components=2):
+    """Visualizes VGG16 extracted features using PCA."""
     feature_matrix = np.array(list(features_dict.values()))
     pca = PCA(n_components=n_components)
     reduced_features = pca.fit_transform(feature_matrix)
     
     plt.figure(figsize=(8, 6))
     plt.scatter(reduced_features[:, 0], reduced_features[:, 1], alpha=0.5, c='blue')
-    plt.title("PCA Visualization of Extracted Features", fontsize=16)
+    plt.title("PCA Visualization of VGG16 Extracted Features", fontsize=16)
     plt.xlabel("Principal Component 1")
     plt.ylabel("Principal Component 2")
     plt.grid(True)
     plt.show()
 
-visualize_features(features)
+visualize_features_vgg16(features_vgg16)
+```
 
+```{python}
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout, Add
+from tensorflow.keras.optimizers import Adam
+
+def define_captioning_model(vocab_size, max_length, embedding_dim=256):
+    """Defines a model for generating captions."""
+    image_input = tf.keras.Input(shape=(4096,))
+
+    caption_input = tf.keras.Input(shape=(max_length,))
+
+    image_features = Dense(embedding_dim, activation='relu')(image_input)
+
+    caption_embedding = Embedding(vocab_size, embedding_dim)(caption_input)
+    caption_lstm = LSTM(256)(caption_embedding)
+
+    merged = Add()([image_features, caption_lstm])
+    merged = Dropout(0.5)(merged)
+
+    output = Dense(vocab_size, activation='softmax')(merged)
+
+    model = tf.keras.Model(inputs=[image_input, caption_input], outputs=output)
+    model.compile(optimizer=Adam(), loss='categorical_crossentropy', metrics=['accuracy'])
+    
+    return model
+
+vocab_size = 10000 
+max_length = 34 
+captioning_model = define_captioning_model(vocab_size, max_length)
+captioning_model.summary()
 ```
