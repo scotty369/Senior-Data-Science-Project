@@ -36,8 +36,8 @@ from wordcloud import WordCloud
 import torch
 from transformers import CLIPProcessor, CLIPModel
 
-image_path = '/Users/scotttow123/Documents/BYUI/Senior Data Science Project/Images'
-caption_file = "/Users/scotttow123/Documents/BYUI/Senior Data Science Project/captions.txt"
+image_path = '/Users/scotttow123/Documents/BYUI/Senior_Project/Images'
+caption_file = "/Users/scotttow123/Documents/BYUI/Senior_Project/captions.txt"
 
 try:
     data = pd.read_csv(caption_file)
@@ -259,7 +259,6 @@ vgg16_model.summary()
 ```
 
 ```{python}
-# %%
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout, Add
 from tensorflow.keras.optimizers import Adam
@@ -371,4 +370,269 @@ vocab_size = 10000
 max_length = 34 
 captioning_model = define_captioning_model(vocab_size, max_length)
 captioning_model.summary()
+```
+
+```{python}
+# %% [markdown]
+
+# %%
+import re
+from collections import Counter
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+import tensorflow as tf 
+
+def clean_text(text):
+    """Cleans the text by removing special characters and converting to lowercase."""
+    text = str(text).lower()
+    text = re.sub(r'[^\w\s]', '', text)
+    return text
+
+def build_vocabulary(captions, threshold=5):
+    """Builds a vocabulary from the captions."""
+    all_text = ' '.join(captions)
+    words = all_text.split()
+    word_counts = Counter(words)
+    vocabulary = [word for word, count in word_counts.items() if count >= threshold]
+    return vocabulary
+
+def create_tokenizer(vocabulary):
+    """Creates a tokenizer from the vocabulary."""
+    tokenizer = Tokenizer()
+    tokenizer.fit_on_texts(vocabulary)
+    return tokenizer
+
+def process_captions(captions, tokenizer, max_length):
+    """Processes the captions to numerical sequences and pads them."""
+    sequences = tokenizer.texts_to_sequences(captions)
+    padded_sequences = pad_sequences(sequences, maxlen=max_length, padding='post')
+    return padded_sequences
+
+data['cleaned_caption'] = data['caption'].apply(clean_text)
+
+vocabulary = build_vocabulary(data['cleaned_caption'])
+
+tokenizer = create_tokenizer(vocabulary)
+
+max_length = 34 
+padded_captions = process_captions(data['cleaned_caption'], tokenizer, max_length)
+
+def add_start_end_tokens(captions):
+    """Adds start and end tokens to each caption."""
+    return ['startseq ' + caption + ' endseq' for caption in captions]
+
+data['tokenized_caption'] = data['cleaned_caption'].apply(add_start_end_tokens).str[0]
+
+vocabulary = build_vocabulary(data['tokenized_caption'])
+tokenizer = create_tokenizer(vocabulary)
+tokenizer.word_index['<pad>'] = 0
+
+padded_captions = process_captions(data['tokenized_caption'], tokenizer, max_length)
+
+vocab_size = len(tokenizer.word_index) + 1
+print(f"Vocabulary size: {vocab_size}")
+print(f"Shape of padded captions: {padded_captions.shape}")
+
+print("First 5 tokenized captions:")
+for i in range(5):
+    print(padded_captions[i])
+```
+
+```{python}
+# %%
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.utils import to_categorical
+import numpy as np
+
+def data_generator(descriptions, features, tokenizer, max_length, vocab_size):
+    """Creates a data generator for training the model."""
+    X1, X2, y = list(), list(), list()
+    for key, desc_list in descriptions.items():
+        image = features[key]
+        for desc in desc_list:
+            seq = tokenizer.texts_to_sequences([desc])[0]
+            for i in range(1, len(seq)):
+                in_seq, out_seq = seq[:i], seq[i]
+                in_seq = pad_sequences([in_seq], maxlen=max_length, padding='post')[0]
+                out_seq = to_categorical([out_seq], num_classes=vocab_size)[0]
+                X1.append(image)
+                X2.append(in_seq)
+                y.append(out_seq)
+    return np.array(X1), np.array(X2), np.array(y)
+
+image_ids = data['image'].tolist()
+all_captions = data['tokenized_caption'].tolist()
+
+train_image_ids, test_image_ids, train_captions, test_captions = train_test_split(
+    image_ids, all_captions, test_size=0.2, random_state=42
+)
+
+train_descriptions = {}
+for img_id, caption in zip(train_image_ids, train_captions):
+    if img_id not in train_descriptions:
+        train_descriptions[img_id] = []
+    train_descriptions[img_id].append(caption)
+
+test_descriptions = {}
+for img_id, caption in zip(test_image_ids, test_captions):
+    if img_id not in test_descriptions:
+        test_descriptions[img_id] = []
+    test_descriptions[img_id].append(caption)
+
+train_features = {k: v for k, v in features_vgg16.items() if k in train_image_ids}
+test_features = {k: v for k, v in features_vgg16.items() if k in test_image_ids}
+
+vocab_size = len(tokenizer.word_index) + 1
+max_length = 34
+embedding_dim = 256
+batch_size = 32
+
+X1_train, X2_train, y_train = data_generator(train_descriptions, train_features, tokenizer, max_length, vocab_size)
+X1_test, X2_test, y_test = data_generator(test_descriptions, test_features, tokenizer, max_length, vocab_size)
+
+steps_per_epoch = len(X1_train) // batch_size
+validation_steps = len(X1_test) // batch_size
+```
+
+```{python}
+# %%
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
+from tensorflow.keras.optimizers import Adam
+
+vocab_size = len(tokenizer.word_index) + 1
+max_length = 34
+embedding_dim = 256
+model = define_captioning_model(vocab_size, max_length, embedding_dim)
+
+checkpoint = ModelCheckpoint('best_model.h5', monitor='val_loss', save_best_only=True, verbose=1)
+early_stopping = EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)  
+
+optimizer = Adam(learning_rate=0.001) 
+
+model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy']) 
+
+epochs = 20 
+
+history = model.fit(
+    [X1_train, X2_train],
+    y_train,
+    epochs=epochs,
+    batch_size=batch_size,
+    validation_data=([X1_test, X2_test], y_test),
+    callbacks=[checkpoint, early_stopping]
+)
+```
+
+```{python}
+# %%
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(12, 6))
+plt.subplot(1, 2, 1)
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.title('Loss Curves')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(history.history['accuracy'], label='Training Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.title('Accuracy Curves')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+# %%
+def idx_to_word(integer, tokenizer):
+    """Converts an integer to a word."""
+    for word, index in tokenizer.word_index.items():
+        if index == integer:
+            return word
+    return None
+
+def predict_caption(model, image, tokenizer, max_length):
+    """Generates a caption for a given image."""
+    in_text = 'startseq'
+    for i in range(max_length):
+        sequence = tokenizer.texts_to_sequences([in_text])[0]
+        sequence = pad_sequences([sequence], maxlen=max_length, padding='post')
+        yhat = model.predict([image.reshape(1, 4096), sequence.reshape(1, max_length)], verbose=0)
+        yhat = np.argmax(yhat)
+        word = idx_to_word(yhat, tokenizer)
+        if word is None:
+            break
+        in_text += ' ' + word
+        if word == 'endseq':
+            break
+    return in_text
+
+def evaluate_model(model, descriptions, features, tokenizer, max_length):
+    """Evaluates the model on the given data."""
+    actual, predicted = list(), list()
+    for key, desc_list in descriptions.items():
+        image = features[key]
+        yhat = predict_caption(model, image, tokenizer, max_length)
+        references = [d.split() for d in desc_list]
+        actual.append(references)
+        predicted.append(yhat.split())
+    print('BLEU-1: %f' % corpus_bleu(actual, predicted, weights=(1.0, 0, 0, 0)))
+    print('BLEU-2: %f' % corpus_bleu(actual, predicted, weights=(0.5, 0.5, 0, 0)))
+    print('BLEU-3: %f' % corpus_bleu(actual, predicted, weights=(0.3, 0.3, 0.3, 0)))
+    print('BLEU-4: %f' % corpus_bleu(actual, predicted, weights=(0.25, 0.25, 0.25, 0.25)))
+
+from nltk.translate.bleu_score import corpus_bleu
+
+model.load_weights('best_model.h5')
+
+evaluate_model(model, test_descriptions, test_features, tokenizer, max_length)
+```
+
+```{python}
+# %%
+from PIL import Image
+import matplotlib.pyplot as plt
+from tensorflow.keras.preprocessing.image import load_img, img_to_array
+from tensorflow.keras.applications.vgg16 import preprocess_input
+from tensorflow.keras.models import Model
+import numpy as np
+from tensorflow.keras.layers import Flatten
+
+x = base_model.output
+x = Flatten()(x) 
+feature_extraction_model = Model(inputs=base_model.input, outputs=x) 
+
+
+def generate_caption(image_path, model, tokenizer, max_length, feature_extraction_model):
+    """Generates a caption for a given image."""
+
+    img = load_img(image_path, target_size=(224, 224)) 
+    img_array = img_to_array(img)
+    img_array = np.expand_dims(img_array, axis=0)
+    img_array = preprocess_input(img_array)  
+
+    features = feature_extraction_model.predict(img_array, verbose=0)
+
+    caption = predict_caption(model, features, tokenizer, max_length)
+
+    print(f"Generated Caption: {caption}")
+    plt.imshow(img)
+    plt.axis('off')
+    plt.title(caption)
+    plt.show()
+
+image_path = '/Users/scotttow123/Documents/BYUI/Senior Data Science Project/Images/667626_18933d713e.jpg'  
+
+base_model = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
+feature_extraction_model = Model(inputs=base_model.input, outputs=base_model.get_layer('block5_pool').output)
+
+model.load_weights('best_model.h5')
+
+generate_caption(image_path, model, tokenizer, max_length, feature_extraction_model)
 ```
