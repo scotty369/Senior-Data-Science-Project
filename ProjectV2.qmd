@@ -21,7 +21,12 @@ Project Deliverables:
 • Visuals: Simple graphs to explain how the model works and where it focuses in the image. 
 • Write-Up: A short explanation of how the project works and why it’s useful.
 
+# Libraries and Data 
+ 
+- First, we need to load the necessary libraries to make this possible. We also need to import the data and load in the captions. 
+
 ```{python}
+# Importing required libraries
 import pandas as pd
 import os
 import tensorflow as tf
@@ -42,10 +47,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from textwrap import wrap
 
+# Paths for images and captions
 image_path = '/Users/scotttow123/Documents/BYUI/Senior_Project/Images'
 
 caption_file = "/Users/scotttow123/Documents/BYUI/Senior_Project/captions.txt"
 
+# Load caption data
 try:
     data = pd.read_csv(caption_file)
     print("Data loaded successfully")
@@ -56,15 +63,22 @@ except FileNotFoundError:
 data.head()
 ```
 
+# Handling Duplicates
+
+- The 
+
 ```{python}
+# Remove duplicates
 if data.duplicated().any():
     print(f"Found {data.duplicated().sum()} duplicate rows. Removing duplicates...")
     data = data.drop_duplicates()
 
+# Handle missing captions
 if data['caption'].isnull().any():
     print(f"Found {data['caption'].isnull().sum()} missing captions. Replacing with 'No caption'.")
     data['caption'] = data['caption'].fillna("No caption")
 
+# Check for valid image paths
 valid_image_paths = data['image'].apply(lambda x: os.path.exists(os.path.join(image_path, x)))
 if not valid_image_paths.all():
     print(f"Found {(~valid_image_paths).sum()} invalid image paths. Removing these rows...")
@@ -72,6 +86,7 @@ if not valid_image_paths.all():
 ```
 
 ```{python}
+# Image Display Section
 def readImage(path,img_size=224):
     img = load_img(path,color_mode='rgb',target_size=(img_size,img_size))
     img = img_to_array(img)
@@ -94,8 +109,11 @@ def display_images(temp_df):
 ```
 
 ```{python}
+# Display sample images with captions
 display_images(data.sample(15))
 ```
+
+# Text Preprocessing Section
 
 ```{python}
 def text_preprocessing(data):
@@ -108,17 +126,22 @@ def text_preprocessing(data):
 ```
 
 ```{python}
+# Apply text preprocessing
 data = text_preprocessing(data)
 captions = data['caption'].tolist()
 captions[:10]
 ```
 
+# Tokenization and Data Splitting Section
+
 ```{python}
+# Tokenize captions
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(captions)
 vocab_size = len(tokenizer.word_index) + 1
 max_length = max(len(caption.split()) for caption in captions)
 
+# Train-test split
 images = data['image'].unique().tolist()
 nimages = len(images)
 
@@ -135,7 +158,10 @@ test.reset_index(inplace=True, drop=True)
 tokenizer.texts_to_sequences([captions[1]])[0]
 ```
 
+# Feature Extraction Section
+
 ```{python}
+# Use DenseNet201 for image feature extraction
 model = DenseNet201()
 fe = Model(inputs=model.input, outputs=model.layers[-2].output)
 
@@ -149,6 +175,7 @@ for image in tqdm(data['image'].unique().tolist()):
     feature = fe.predict(img, verbose=0)
     features[image] = feature
 ```
+
 
 ```{python}
 class CustomDataGenerator(Sequence):
@@ -207,13 +234,18 @@ class CustomDataGenerator(Sequence):
         return X1, X2, y
 ```
 
+# Model Creation Section
+
 ```{python}
+# Define input layers
 input1 = Input(shape=(1920,))
 input2 = Input(shape=(max_length,))
 
+# Image feature layers
 img_features = Dense(256, activation='relu')(input1)
 img_features_reshaped = Reshape((1, 256), input_shape=(256,))(img_features)
 
+# Text feature layers
 sentence_features = Embedding(vocab_size, 256, mask_zero=False)(input2)
 merged = concatenate([img_features_reshaped, sentence_features], axis=1)
 sentence_features = LSTM(256)(merged)
@@ -223,6 +255,7 @@ x = Dense(128, activation='relu')(x)
 x = Dropout(0.5)(x)
 output = Dense(vocab_size, activation='softmax')(x)
 
+# Compile the model
 caption_model = Model(inputs=[input1, input2], outputs=output)
 caption_model.compile(loss='categorical_crossentropy', optimizer='adam')
 ```
@@ -236,6 +269,7 @@ plot_model(caption_model)
 ```
 
 ```{python}
+# Model summary
 caption_model.summary()
 ```
 
