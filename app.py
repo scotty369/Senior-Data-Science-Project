@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import os
 import tensorflow as tf
-from tensorflow.keras.preprocessing.image import load_img # type: ignore
+from tensorflow.keras.preprocessing.image import load_img 
 import matplotlib.pyplot as plt
 from textwrap import wrap
 import numpy as np
